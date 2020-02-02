@@ -1,6 +1,6 @@
 <template>
   <div class="goods-item">
-    <img :src="good.show.img">
+    <img :src="good.show.img" @load="imageLoad" @click="itemClick(good)">
     <div class="goods-info">
       <p>{{good.title}}</p>
       <span class="price">{{good.price}}</span>
@@ -16,6 +16,20 @@
       good: {
         type: Object,
         default: {}
+      }
+    },
+    methods: {
+      // Vue的@load是监听img加载完成的，每加载完成一张img发送一次事件
+      imageLoad(){
+        this.$bus.$emit('itemImageLoad')
+      },
+      itemClick(good){
+        this.$router.push({
+          path: '/detail',
+          query: {
+            iid: good.iid
+          }
+        })
       }
     }
   }
