@@ -6,12 +6,14 @@ export function request(config) {
     // baseURL: 'http://106.54.54.237:8000/api/hy',
     timeout: 200000000 //开发使用
   })
+  // request拦截器
   instance.interceptors.request.use(
     config => {
     return config
   }, error => {
     return error
   })
+  // response拦截器
   instance.interceptors.response.use(
     response => {
       // 因为这里的接口是两层data，所以拦截过滤一下

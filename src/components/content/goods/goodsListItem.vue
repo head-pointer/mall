@@ -1,6 +1,6 @@
 <template>
   <div class="goods-item">
-    <img :src="good.show.img" @load="imageLoad" @click="itemClick(good)">
+    <img :src="showImage" @load="imageLoad" @click="itemClick(good)">
     <div class="goods-info">
       <p>{{good.title}}</p>
       <span class="price">{{good.price}}</span>
@@ -16,6 +16,12 @@
       good: {
         type: Object,
         default: {}
+      }
+    },
+    computed: {
+      showImage(){
+        // 这里的顺序注意一下
+        return this.good.image || this.good.show.img
       }
     },
     methods: {

@@ -1,13 +1,11 @@
 <template>
-  <div>
-    <Swiper :interval="3000" :animDuration="300" :moveRatio="0.25" :showIndicator="true">
-      <SwiperItem v-for="item in banners">
-        <a :href="item.link">
-          <img :src="item.image" @load="imageLoad">
-        </a>
-      </SwiperItem>
-    </Swiper>
-  </div>
+  <Swiper :interval="3000" :animDuration="400" :moveRatio="0.25" :showIndicator="true">
+    <SwiperItem v-for="item in banners">
+      <a :href="item.link">
+        <img :src="item.image" @load="imageLoad">
+      </a>
+    </SwiperItem>
+  </Swiper>
 </template>
 
 <script>

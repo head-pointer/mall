@@ -28,8 +28,9 @@
   import backTop from 'components/common/backTop/backTop'
 
   import {getHomeMultiData, getHomeGoods} from "network/home"
-  import {debounce} from "common/utils";
   import index from "../../store";
+
+  import {itemListenerMixin} from "common/mixins";
 
   export default {
     name: "home",
@@ -55,7 +56,7 @@
         currentType: 'pop',
         isShow: false,
         tabOffsetTop: 0,
-        isFixed: false
+        isFixed: false,
       }
     },
     created(){
@@ -66,13 +67,11 @@
       this.getHomeGoods('sell')
     },
     mounted(){
-      this.$refs.scroll.refresh()
-      const refresh = debounce(this.$refs.scroll.refresh, 200)
-      // 监听item的图片加载
-      this.$bus.$on('itemImageLoad', () => {
-        // 重新计算scrollerHeight
-        refresh()
-      })
+      // 这里不能删除，因为存在mixin中的混用代码
+    },
+    deactivated() {
+      // 取消home的全局监听，事件总线
+      this.$bus.$off('itemImageLoad', this.itemImageListener)
     },
     computed: {
       showGoods(){
@@ -129,7 +128,8 @@
           this.goods[type].page = page
         })
       }
-    }
+    },
+    mixins: [itemListenerMixin]
   }
 </script>
 
