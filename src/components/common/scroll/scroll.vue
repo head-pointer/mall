@@ -31,7 +31,7 @@
         probeType: this.probeType,
         pullUpLoad: this.pullUpLoad
       })
-      // backTop的隐藏与显示
+      // 监听better-scroll
       this.scroll.on('scroll', position => {
         this.$emit('scrollContent', position)
       })

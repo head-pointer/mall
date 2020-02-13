@@ -25,12 +25,11 @@
   import tabControl from 'components/content/tabControl/tabControl'
   import goodsList from 'components/content/goods/goodsList'
   import scroll from 'components/common/scroll/scroll'
-  import backTop from 'components/common/backTop/backTop'
 
   import {getHomeMultiData, getHomeGoods} from "network/home"
   import index from "../../store";
 
-  import {itemListenerMixin} from "common/mixins";
+  import {itemListenerMixin, backTopMixin} from "common/mixins";
 
   export default {
     name: "home",
@@ -41,8 +40,7 @@
       navBar,
       tabControl,
       goodsList,
-      scroll,
-      backTop
+      scroll
     },
     data(){
       return{
@@ -54,7 +52,6 @@
           'sell': {page: 0, list: []}
         },
         currentType: 'pop',
-        isShow: false,
         tabOffsetTop: 0,
         isFixed: false,
       }
@@ -97,11 +94,10 @@
         this.$refs.tabControl.currentIndex = index
         this.$refs.tabControl_top.currentIndex = index
       },
-      backClick(){
-        this.$refs.scroll.scrollTo(0, 0)
-      },
+
       scrollContent(position){
-        this.isShow = position.y < -1000
+        // 是否显示回到顶部
+        this.show(position)
         this.isFixed = position.y < -this.tabOffsetTop
       },
       pullUpLoad(){
@@ -129,7 +125,7 @@
         })
       }
     },
-    mixins: [itemListenerMixin]
+    mixins: [itemListenerMixin, backTopMixin]
   }
 </script>
 

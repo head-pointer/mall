@@ -1,21 +1,25 @@
 <template>
   <div id="detail">
-    <detail-nav-bar class="detail-bar"/>
-    <scroll class="content" ref="scroll">
+    <detail-nav-bar class="detail-bar" @titleClick="titleClick" ref="nav"/>
+      <scroll class="content" ref="scroll" :probeType="3" @scrollContent="scrollContent">
       <detail-swiper :topImages="topImages"/>
       <detail-base-info :goodsInfo="goodsInfo"/>
       <detail-shop-info :shopInfo="shopInfo"/>
       <detail-goods-info :detailGoodsInfo="detailGoodsInfo" @imageLoad="imageLoad"/>
-      <detail-param-info :goodsParamInfo="goodsParamInfo"/>
-      <detail-comment-info :commentInfo="commentInfo"/>
-      <goods-list :goods="recommendInfo"/>
+      <detail-param-info :goodsParamInfo="goodsParamInfo" ref="param"/>
+      <detail-comment-info :commentInfo="commentInfo" ref="commend"/>
+      <goods-list :goods="recommendInfo" ref="recommend"/>
     </scroll>
+    <back-top @click.native="backClick" v-show="isShow"/>
+    <detail-bottom-bar @addToCart="addToCart"/>
+    <toast/>
   </div>
 </template>
 
 <script>
   import scroll from 'components/common/scroll/scroll'
   import goodsList from 'components/content/goods/goodsList'
+  import toast from 'components/common/toast/toast'
 
   import detailNavBar from './childComps/detailNavBar'
   import detailSwiper from './childComps/detailSwiper'
@@ -24,11 +28,15 @@
   import detailGoodsInfo from './childComps/detailGoodsInfo'
   import detailParamInfo from './childComps/detailParamInfo'
   import detailCommentInfo from './childComps/detailCommentInfo'
+  import detailBottomBar from './childComps/detailBottomBar'
 
   import {getDetailInfo, getRecommend, goodsInfo, shopInfo, goodsParamInfo} from "network/detail"
-  import GoodsList from "../../components/content/goods/goodsList";
 
-  import {itemListenerMixin} from "common/mixins";
+  import {debounce} from "common/utils"
+  import {itemListenerMixin, backTopMixin} from "common/mixins"
+
+  import {ADD_CART} from "store/mutations-types"
+  import {mapActions} from 'vuex'
 
   export default {
     name: "detail",
@@ -41,7 +49,10 @@
         detailGoodsInfo: {},
         goodsParamInfo: {},
         commentInfo: {},
-        recommendInfo: []
+        recommendInfo: [],
+        themeTopYs: [],
+        getThemeTop: null,
+        currentIndex: 0
       }
     },
     created(){
@@ -56,13 +67,20 @@
         if (data.result.rate.list != null) {
           this.commentInfo = data.result.rate.list[0]
         }
-      })
 
+      })
       // 获取推荐商品内容
       getRecommend().then( result => {
         this.recommendInfo = result.data.list
-        console.log(this.recommendInfo);
       })
+
+      this.getThemeTop = debounce(() => {
+        this.themeTopYs = []
+        this.themeTopYs.push(0)
+        this.themeTopYs.push(this.$refs.param.$el.offsetTop)
+        this.themeTopYs.push(this.$refs.commend.$el.offsetTop)
+        this.themeTopYs.push(this.$refs.recommend.$el.offsetTop)
+      }, 200)
     },
     mounted() {
       // 这里不能删除，因为存在mixin中的混用代码
@@ -72,7 +90,10 @@
       this.$bus.$off('itemImageLoad', this.itemImageListener)
     },
     components: {
-      GoodsList,
+      goodsList,
+      scroll,
+      toast,
+
       detailNavBar,
       detailSwiper,
       detailBaseInfo,
@@ -80,14 +101,54 @@
       detailGoodsInfo,
       detailParamInfo,
       detailCommentInfo,
-      scroll
+      detailBottomBar
+
     },
     methods: {
+      ...mapActions(['addCart']),
       imageLoad(){
         this.$refs.scroll.refresh()
+        this.getThemeTop()
+      },
+      titleClick(index){
+        if (index === 0){
+          this.$refs.scroll.scrollTo(0, -this.themeTopYs[0])
+        }else if (index === 1){
+          this.$refs.scroll.scrollTo(0, -this.themeTopYs[1])
+        }else if (index === 2){
+          this.$refs.scroll.scrollTo(0, -this.themeTopYs[2])
+        }else {
+          this.$refs.scroll.scrollTo(0, -this.themeTopYs[3])
+        }
+      },
+      scrollContent(position){
+        const positionY = -position.y
+        // 这里给themeTopYs添加一个max值，可以有效的避免数组越界的问题，以空间换时间
+        this.themeTopYs.push(Number.MAX_VALUE)
+        for (let index = 0; index < this.themeTopYs.length - 1; index++){
+          if (this.currentIndex !== index &&
+            (this.themeTopYs[index] <= positionY && this.themeTopYs[index + 1] > positionY)){
+            this.currentIndex = index
+            this.$refs.nav.currentIndex = index
+          }
+        }
+
+        this.show(position)
+      },
+      addToCart(){
+        const goods = {
+          iid: this.iid,
+          title: this.goodsInfo.title,
+          image: this.topImages[0],
+          desc: this.goodsInfo.desc,
+          realPrice: this.goodsInfo.realPrice
+        }
+        this.addCart(goods).then(() => {
+          this.$toast.show('添加成功！！', 2000)
+        })
       }
     },
-    mixins: [itemListenerMixin]
+    mixins: [itemListenerMixin, backTopMixin]
   }
 </script>
 
@@ -104,6 +165,7 @@
     background-color: #ffffff;
   }
   .content{
-    height: calc(100% - 44px);
+    height: calc(100% - 44px - 49px);
+    overflow: hidden;
   }
 </style>

@@ -21,7 +21,7 @@
     computed: {
       showImage(){
         // 这里的顺序注意一下
-        return this.good.image || this.good.show.img
+        return this.good.img || this.good.image || this.good.show.img
       }
     },
     methods: {
